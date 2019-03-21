@@ -26,3 +26,12 @@
 .react-grid-Canvas {
   background-color: #ffffff;
 }
+
+/* .react-grid-Canvas {
+  overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none;
+}
+
+.react-grid-Canvas::-webkit-scrollbar {
+  width: 0 !important
+} */
