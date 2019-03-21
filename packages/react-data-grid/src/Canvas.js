@@ -128,29 +128,17 @@ export default class Canvas extends React.PureComponent {
 
   scrollToRow = (scrollToRowIndex) => {
     const { rowHeight, rowsCount, height } = this.props;
-    this.canvasVertical.scrollTop = Math.min(
+    this.canvas.scrollTop = Math.min(
       scrollToRowIndex * rowHeight,
       rowsCount * rowHeight - height
     );
   };
 
   onScroll = (e) => {
-    if (this.canvasVertical !== e.target) {
+    if (this.canvas !== e.target) {
       return;
     }
-    const { scrollTop } = e.target;
-    const { scrollLeft } = this.canvasHorizontal;
-    const scroll = { scrollTop, scrollLeft };
-    this._scroll = scroll;
-    this.props.onScroll(scroll);
-  };
-
-  onHorizontalScroll = (e) => {
-    if (this.canvasHorizontal !== e.target) {
-      return;
-    }
-    const { scrollLeft } = e.target;
-    const { scrollTop } = this.canvasVertical;
+    const { scrollLeft, scrollTop } = e.target;
     const scroll = { scrollTop, scrollLeft };
     this._scroll = scroll;
     this.props.onScroll(scroll);
@@ -164,23 +152,22 @@ export default class Canvas extends React.PureComponent {
 
   onHitBottomCanvas = () => {
     const { rowHeight } = this.props;
-    const node = this.canvasVertical;
+    const node = this.canvas;
     node.scrollTop += rowHeight + this.getClientScrollTopOffset(node);
   }
 
   onHitTopCanvas = () => {
     const { rowHeight } = this.props;
-    const node = this.canvasVertical;
+    const node = this.canvas;
     node.scrollTop -= (rowHeight - this.getClientScrollTopOffset(node));
   }
 
   scrollToColumn = (idx) => {
-    const { clientWidth } = this.canvasVertical;
-    const { scrollLeft } = this.canvasHorizontal;
+    const { scrollLeft, clientWidth } = this.canvas;
     const newScrollLeft = getColumnScrollPosition(this.props.columns, idx, scrollLeft, clientWidth);
 
     if (newScrollLeft != null) {
-      this.canvasVertical.scrollLeft = scrollLeft + newScrollLeft;
+      this.canvas.scrollLeft = scrollLeft + newScrollLeft;
     }
   }
 
@@ -212,8 +199,7 @@ export default class Canvas extends React.PureComponent {
   };
 
   getScroll = () => {
-    const { scrollTop } = this.canvasVertical;
-    const { scrollLeft } = this.canvasHorizontal;
+    const { scrollTop, scrollLeft } = this.canvas;
     return { scrollTop, scrollLeft };
   };
 
@@ -281,13 +267,9 @@ export default class Canvas extends React.PureComponent {
     return row && row.props ? row.props.columns : this.props.columns;
   };
 
-  setCanvasVerticalRef = el => {
-    this.canvasVertical = el;
+  setCanvasRef = el => {
+    this.canvas = el;
   };
-
-  setCanvasHorizontalRef = el => {
-    this.canvasHorizontal = el;
-  }
 
   setRowRef = idx => row => {
     this.rows[idx] = row;
@@ -397,97 +379,84 @@ export default class Canvas extends React.PureComponent {
         this.renderPlaceholder('bottom', (rowsCount - rowOverscanEndIdx) * rowHeight));
     }
 
-    const scrollBarWeight = this.canvasHorizontal ? this.canvasHorizontal.offsetHeight - this.canvasHorizontal.clientHeight : 17;
-    const footerOffset = height - 35 - scrollBarWeight;
+    const scrollBarWeight = this.canvas ? this.canvas.offsetHeight - this.canvas.clientHeight : 17;
+    const footerOffset = height - rowHeight - scrollBarWeight;
 
     const style = {
       position: 'absolute',
       top: 0,
       left: 0,
-      width: totalWidth
-    };
-
-    const canvasVerticalStyle = {
-      ...style,
-      width: totalWidth + this._scroll.scrollLeft,
-      // width: totalColumnWidth,
-      overflowX: 'hidden',
-      overflowY: 'scroll',
-      height: height - 35 - scrollBarWeight,
-      paddingBottom: 10
-    };
-
-    const canvasHorizontalStyle = {
-      ...style,
       overflowX: 'auto',
-      overflowY: 'hidden',
-      height
+      overflowY: 'scroll',
+      width: totalWidth,
+      height,
+      paddingBottom: 40
     };
 
     return (
-      <div
-        ref={this.setCanvasHorizontalRef}
-        style={canvasHorizontalStyle}
-        onScroll={this.onHorizontalScroll}
-      >
-        <div style={{ width: totalColumnWidth }}>
-          <div
-            ref={this.setCanvasVerticalRef}
-            style={canvasVerticalStyle}
-            onScroll={this.onScroll}
-            className="react-grid-Canvas"
-          >
-            <InteractionMasks
-              ref={this.setInteractionMasksRef}
-              rowGetter={rowGetter}
-              rowsCount={rowsCount}
-              width={this.props.totalWidth}
-              height={height}
-              rowHeight={rowHeight}
-              columns={columns}
-              rowOverscanStartIdx={this.props.rowOverscanStartIdx}
-              rowVisibleStartIdx={this.props.rowVisibleStartIdx}
-              rowVisibleEndIdx={this.props.rowVisibleEndIdx}
-              colVisibleStartIdx={colVisibleStartIdx}
-              colVisibleEndIdx={colVisibleEndIdx}
-              enableCellSelect={this.props.enableCellSelect}
-              enableCellAutoFocus={this.props.enableCellAutoFocus}
-              cellNavigationMode={this.props.cellNavigationMode}
-              eventBus={this.props.eventBus}
-              contextMenu={this.props.contextMenu}
-              onHitBottomBoundary={this.onHitBottomCanvas}
-              onHitTopBoundary={this.onHitTopCanvas}
-              onHitLeftBoundary={this.onHitLeftCanvas}
-              onHitRightBoundary={this.onHitRightCanvas}
-              onCommit={this.props.onCommit}
-              onCheckCellIsEditable={this.props.onCheckCellIsEditable}
-              onCellCopyPaste={this.props.onCellCopyPaste}
-              onGridRowsUpdated={this.props.onGridRowsUpdated}
-              onDragHandleDoubleClick={this.props.onDragHandleDoubleClick}
-              onCellSelected={this.props.onCellSelected}
-              onCellDeSelected={this.props.onCellDeSelected}
-              onCellRangeSelectionStarted={this.props.onCellRangeSelectionStarted}
-              onCellRangeSelectionUpdated={this.props.onCellRangeSelectionUpdated}
-              onCellRangeSelectionCompleted={this.props.onCellRangeSelectionCompleted}
-              scrollLeft={this._scroll.scrollLeft}
-              scrollTop={this._scroll.scrollTop}
-              getRowHeight={this.getRowHeight}
-              getRowTop={this.getRowTop}
-              getRowColumns={this.getRowColumns}
-              editorPortalTarget={this.props.editorPortalTarget}
-            />
-            <RowsContainer id={contextMenu ? contextMenu.props.id : 'rowsContainer'}>
-              <div style={{ width: totalColumnWidth }}>{rows}</div>
-            </RowsContainer>
-          </div>
+      <>
+        <div
+          ref={this.setCanvasRef}
+          style={style}
+          onScroll={this.onScroll}
+          className="react-grid-Canvas"
+        >
+          <InteractionMasks
+            ref={this.setInteractionMasksRef}
+            rowGetter={rowGetter}
+            rowsCount={rowsCount}
+            width={this.props.totalWidth}
+            height={height}
+            rowHeight={rowHeight}
+            columns={columns}
+            rowOverscanStartIdx={this.props.rowOverscanStartIdx}
+            rowVisibleStartIdx={this.props.rowVisibleStartIdx}
+            rowVisibleEndIdx={this.props.rowVisibleEndIdx}
+            colVisibleStartIdx={colVisibleStartIdx}
+            colVisibleEndIdx={colVisibleEndIdx}
+            enableCellSelect={this.props.enableCellSelect}
+            enableCellAutoFocus={this.props.enableCellAutoFocus}
+            cellNavigationMode={this.props.cellNavigationMode}
+            eventBus={this.props.eventBus}
+            contextMenu={this.props.contextMenu}
+            onHitBottomBoundary={this.onHitBottomCanvas}
+            onHitTopBoundary={this.onHitTopCanvas}
+            onHitLeftBoundary={this.onHitLeftCanvas}
+            onHitRightBoundary={this.onHitRightCanvas}
+            onCommit={this.props.onCommit}
+            onCheckCellIsEditable={this.props.onCheckCellIsEditable}
+            onCellCopyPaste={this.props.onCellCopyPaste}
+            onGridRowsUpdated={this.props.onGridRowsUpdated}
+            onDragHandleDoubleClick={this.props.onDragHandleDoubleClick}
+            onCellSelected={this.props.onCellSelected}
+            onCellDeSelected={this.props.onCellDeSelected}
+            onCellRangeSelectionStarted={this.props.onCellRangeSelectionStarted}
+            onCellRangeSelectionUpdated={this.props.onCellRangeSelectionUpdated}
+            onCellRangeSelectionCompleted={this.props.onCellRangeSelectionCompleted}
+            scrollLeft={this._scroll.scrollLeft}
+            scrollTop={this._scroll.scrollTop}
+            getRowHeight={this.getRowHeight}
+            getRowTop={this.getRowTop}
+            getRowColumns={this.getRowColumns}
+            editorPortalTarget={this.props.editorPortalTarget}
+          />
+          <RowsContainer id={contextMenu ? contextMenu.props.id : 'rowsContainer'}>
+            <div style={{ width: totalColumnWidth }}>{rows}</div>
+          </RowsContainer>
+        </div>
+        <div style={{
+          width: totalWidth - 17,
+          overflow: 'hidden',
+          height: rowHeight,
+          position: 'absolute',
+          top: footerOffset,
+          borderTop: '1px solid #dddddd',
+          borderBottom: '1px solid #dddddd'
+        }}
+        >
           <div style={{
             width: totalColumnWidth,
-            height: rowHeight,
-            position: 'absolute',
-            top: footerOffset,
-            background: 'white',
-            borderTop: '1px solid #dddddd',
-            borderBottom: '1px solid #dddddd',
+            backgroundColor: 'rgb(249, 249, 249)',
             lineHeight: '35px',
             paddingLeft: 10
           }}
@@ -495,7 +464,7 @@ export default class Canvas extends React.PureComponent {
             this is the footer this is the footer this is the footer this is the footer this is the footer this is the footer this is the footer
           </div>
         </div>
-      </div>
+      </>
     );
   }
 }
