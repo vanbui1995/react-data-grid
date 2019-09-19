@@ -85,9 +85,13 @@ export default class Cell<R> extends React.PureComponent<Props<R>> implements Ce
   }
 
   getCellClass() {
-    const { idx, column, lastFrozenColumnIndex, isRowSelected, tooltip, expandableOptions } = this.props;
+    const { idx, column, lastFrozenColumnIndex, isRowSelected, tooltip, expandableOptions, rowData } = this.props;
+    let cellClass = column.cellClass;
+    if (typeof cellClass === 'function') {
+      cellClass = cellClass(rowData);
+    }
     return classNames(
-      column.cellClass,
+      cellClass,
       'react-grid-Cell',
       this.props.className, {
         'react-grid-Cell--frozen': isFrozen(column),
@@ -117,7 +121,7 @@ export default class Cell<R> extends React.PureComponent<Props<R>> implements Ce
   removeScroll() {
     const node = this.cell.current;
     if (node) {
-      node.style.transform = null;
+      node.style.transform = '';
     }
   }
 

@@ -15,7 +15,7 @@ interface ColumnValue<TRow, TDependentValue = unknown, TField extends keyof TRow
   /** Column width. If not specified, it will be determined automatically based on grid width and specified widths of other columns*/
   width?: number;
   hidden?: boolean;
-  cellClass?: string;
+  cellClass?: string | ((value: any) => string);
   /** By adding an event object with callbacks for the native react events you can bind events to a specific column. That will not break the default behaviour of the grid and will run only for the specified column */
   events?: {
     [key: string]: undefined | ((e: Event, info: ColumnEventInfo<TRow>) => void);
